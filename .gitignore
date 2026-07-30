@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment variables
+.env
+.env.*
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Generated output
+backend/output/
+
+# Uploaded and sample documents
+backend/samples/*.pdf
