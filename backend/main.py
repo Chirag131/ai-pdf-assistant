@@ -1,38 +1,28 @@
 from services.pdf_services import extract_pdf_text
+from services.chunking_service import chunk_pages
 from pathlib import Path
-
-
-def display_extracted_pages(pages: list[dict]) -> None:
-    """Display extracted PDF pages in the terminal."""
-
-    print(f"\nSuccessfully processed {len(pages)} page(s).\n")
-
-    for page in pages :
-        page_number = page['page_number']
-        text = page['text']
-        character_count = page["character_count"]
-
-        print("=" * 70)
-        print(f"PAGE {page_number}")
-        print(f"CHARACTERS EXTRACTED: {character_count}")
-        print("=" * 70)
-        
-        if text:
-            print(text)
-        else:
-            print('No selectable text found on this page')
-        print()
-
+    
 def main() -> None:
     pdf_path = Path(__file__).parent / "samples" / "sample1.pdf"
 
     try:
         pages = extract_pdf_text(pdf_path)
-        display_extracted_pages(pages)
+        chunks = chunk_pages(pages)
+
+        print(f"Pages extracted: {len(pages)}")
+        print(f"Chunks created: {len(chunks)}")
+
+        for chunk in chunks[:5]:
+            print("=" * 70)
+            print(chunk["chunk_id"])
+            print(f"Page: {chunk['page_number']}")
+            print(f"Characters: {chunk['character_count']}")
+            print("=" * 70)
+            print(chunk["text"])
+            print()
 
     except (FileNotFoundError, ValueError, RuntimeError) as error:
-        print(f"\nError: {error}")
-
+        print(f"Error: {error}")
 
 if __name__ == "__main__":
     main()
