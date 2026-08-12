@@ -24,3 +24,5 @@ backend/output/
 
 # Uploaded and sample documents
 backend/samples/*.pdf
+
+chroma_data
