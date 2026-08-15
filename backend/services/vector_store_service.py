@@ -4,31 +4,51 @@ import chromadb
 
 from services.embedding_service import generate_query_embedding
 
-CHROMA_PATH = Path(__file__).parent.parent/"chroma_data"
+
+CHROMA_PATH = Path(__file__).parent.parent / "chroma_data"
+
 COLLECTION_NAME = "pdf_chunks"
+
+
+print("CHROMA PATH:", CHROMA_PATH)
+
 
 client = chromadb.PersistentClient(
     path=str(CHROMA_PATH)
 )
+
 
 collection = client.get_or_create_collection(
     name=COLLECTION_NAME,
     embedding_function=None,
 )
 
-def store_chunks(embedded_chunks: list[dict]) -> None :
+
+print("COLLECTION NAME:", collection.name)
+print("COLLECTION COUNT:", collection.count())
+
+
+def store_chunks(embedded_chunks: list[dict]) -> None:
+
     if not embedded_chunks:
         return
-    
+
     ids = []
-    documents = [] 
+    documents = []
     embeddings = []
     metadatas = []
-    
+
     for chunk in embedded_chunks:
+
         ids.append(chunk["chunk_id"])
-        documents.append(chunk["text"])
-        embeddings.append(chunk["embedding"])
+
+        documents.append(
+            chunk["text"]
+        )
+
+        embeddings.append(
+            chunk["embedding"]
+        )
 
         metadatas.append(
             {
@@ -37,7 +57,7 @@ def store_chunks(embedded_chunks: list[dict]) -> None :
                 "character_count": chunk["character_count"],
             }
         )
-        
+
     collection.upsert(
         ids=ids,
         documents=documents,
@@ -45,17 +65,33 @@ def store_chunks(embedded_chunks: list[dict]) -> None :
         metadatas=metadatas,
     )
 
-def get_chunk_count() -> int:
-    return collection.count()
- 
+
 def search_vector_store(
     query: str,
     top_k: int = 3,
 ) -> list[dict]:
-    if top_k <= 0:
-        raise ValueError("top_k must be greater than 0")
 
-    query_embedding = generate_query_embedding(query)
+    if top_k <= 0:
+        raise ValueError(
+            "top_k must be greater than 0"
+        )
+
+    # ---------------------------------
+    # Generate query embedding
+    # ---------------------------------
+
+    query_embedding = generate_query_embedding(
+        query
+    )
+
+    print(
+        "QUERY EMBEDDING LENGTH:",
+        len(query_embedding)
+    )
+
+    # ---------------------------------
+    # Query ChromaDB
+    # ---------------------------------
 
     results = collection.query(
         query_embeddings=[query_embedding],
@@ -67,16 +103,41 @@ def search_vector_store(
         ],
     )
 
+    print(
+        "CHROMA RESULT IDS:",
+        results["ids"]
+    )
+
     search_results = []
 
-    for index in range(len(results["ids"][0])):
+    # ---------------------------------
+    # Convert Chroma result
+    # ---------------------------------
+
+    if not results["ids"]:
+        return []
+
+    if not results["ids"][0]:
+        return []
+
+    for index in range(
+        len(results["ids"][0])
+    ):
+
         search_results.append(
             {
                 "chunk_id": results["ids"][0][index],
+
                 "text": results["documents"][0][index],
+
                 "metadata": results["metadatas"][0][index],
+
                 "distance": results["distances"][0][index],
             }
         )
 
     return search_results
+
+
+def get_chunk_count() -> int:
+    return collection.count()
