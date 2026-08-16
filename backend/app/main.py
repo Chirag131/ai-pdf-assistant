@@ -1,12 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.routes import router
 
+
 app = FastAPI(
-    title="RAG AI BOT",
-    version='0.1.0'
+    title="AI PDF Assistant API",
+    version="0.1.0",
 )
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -17,9 +20,17 @@ app.add_middleware(
 )
 
 
+app.mount(
+    "/uploads",
+    StaticFiles(directory="uploads"),
+    name="uploads",
+)
+
+
 app.include_router(router)
 
-@app.get('/health')
+
+@app.get("/health")
 def health_check():
     return {
         "status": "ok",
